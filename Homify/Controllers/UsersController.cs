@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Cors;
 //using System.Web.Mvc;
 
 namespace Homify.Controllers
@@ -47,9 +48,71 @@ namespace Homify.Controllers
                 var emailService = new EmailServices();
                 emailService.SendEmail(user.emailContact, "Welcome to Homify!", $"Dear {user.userName}, you have been successfully registered with Homify.");
 
-                return Ok(new { message = "User registered successfully" });
+                
+                //return Ok(new { message = "User registered successfully" });
+                return Json(user);
             }
             return BadRequest("Invalid property data.");
+        }
+
+        //api to get user properties
+        [HttpGet]
+        [Route("userProperties/{id:int}")]
+        public IHttpActionResult getUserProperties(int id)
+        {
+            //track if the user exists in the database
+            var trackUser = _homifyDB.Users.Where(x => x.userId == id ).FirstOrDefault();
+            //check if the user exists in the database
+            if (trackUser != null)
+            {
+                //track properties owned by the user
+                var trackuserProperties = _homifyDB.Properties.Include("Descriptions").Include("PropertyImages").Where(p => p.userId == trackUser.userId).ToList();
+                //check whether the user has any properties
+                if (trackuserProperties.Any())
+                {
+                    var property = trackuserProperties.Select(p => new Propertydto
+                    {
+                        propertyId = p.propertyId,
+                        userId = p.userId,
+                        price = p.price,
+                        location = p.location,
+                        status = p.status,
+                        //for fetching list of decriptions for the property
+                        Descriptions = p.Descriptions.Select(d => new Descriptionsdto
+                        {
+                            description1 = d.description1,
+                            propertyId = d.propertyId,
+                            landType = d.landType,
+                            size = d.size,
+                            houseType = d.houseType,
+                            bedRooms = d.bedRooms,
+                            parking = d.parking,
+                            bathRooms = d.bedRooms,
+                            YearBuilt = d.YearBuilt,
+                            Amentities = d.Amentities,
+                        }).ToList(),
+                        //for fetching images of the property
+                        PropertyImages = p.PropertyImages.Select(i => new PropertyImagesdto
+                        {
+                            imageId = i.imageId,
+                            propertyId = i.propertyId,
+                            imagePath = i.imagePath,
+                        }).ToList()
+                    }).ToList();
+                    return Ok(property);
+                }
+                // if the user has no properties
+                else
+                {
+                    return Ok(new { message = "no properties yet" });
+                }
+            }
+            //if the user dont exist in the database
+            else
+            {
+                return BadRequest("Invalid user data.");
+            }
+
         }
 
         //api to update user data
@@ -120,51 +183,19 @@ namespace Homify.Controllers
             if (user != null)
             {
                 //track if the user exists in the database
-                var trackUser = _homifyDB.Users.Where(x => x.userName == user.userName && x.passWord == user.passWord).FirstOrDefault();
+                var trackUser = _homifyDB.Users.FirstOrDefault(x => x.userName == user.userName && x.passWord == user.passWord);
                 //check if the user exists in the database
                 if (trackUser != null)
                 {
-                    //track properties owned by the logged in user
-                    var trackuserProperties = _homifyDB.Properties.Include("Descriptions").Include("PropertyImages").Where(p => p.userId == trackUser.userId).ToList();
-                    //check whether the user has any properties
-                    if (trackuserProperties.Any())
+                    //return Json(trackUser);
+                    var responseUser = new
                     {
-                        var property = trackuserProperties.Select(p => new Propertydto
-                        {
-                            propertyId = p.propertyId,
-                            userId = p.userId,
-                            price = p.price,
-                            location = p.location,
-                            status = p.status,
-                            //for fetching list of decriptions for the property
-                            Descriptions = p.Descriptions.Select(d => new Descriptionsdto
-                            {
-                                description1 = d.description1,
-                                propertyId = d.propertyId,
-                                landType = d.landType,
-                                size = d.size,
-                                houseType = d.houseType,
-                                bedRooms = d.bedRooms,
-                                parking = d.parking,
-                                bathRooms = d.bedRooms,
-                                YearBuilt = d.YearBuilt,
-                                Amentities = d.Amentities,
-                            }).ToList(),
-                            //for fetching images of the property
-                            PropertyImages = p.PropertyImages.Select(i => new PropertyImagesdto
-                            {
-                                imageId = i.imageId,
-                                propertyId = i.propertyId,
-                                imagePath = i.imagePath,
-                            }).ToList()
-                        }).ToList();
-                        return Ok(property);
-                    }
-                    // if the user has no properties
-                    else
-                    {
-                        return Ok(new { message = "no properties yet" });
-                    }
+                        trackUser.userId,
+                        trackUser.userName,
+                        trackUser.emailContact,
+                    };
+
+                    return Json(responseUser);
                 }
                 //if the user dont exist in the database
                 else

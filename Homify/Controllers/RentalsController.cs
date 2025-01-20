@@ -39,6 +39,8 @@ namespace Homify.Controllers
             {
                 var rental = trackUserRentals.Select(r => new Rentaldto
                 {
+                    userId = r.userId,
+                    rentalId = r.rentalId,
                     clientName = r.clientName,
                     clientContact = r.clientContact,
                     clientEmail = r.clientEmail,

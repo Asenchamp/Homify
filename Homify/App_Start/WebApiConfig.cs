@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace Homify
 {
@@ -22,6 +23,11 @@ namespace Homify
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+
+            // Enable CORS
+            var corsAttr = new EnableCorsAttribute("http://localhost:3000", "*", "GET,POST,PUT,DELETE,OPTIONS");
+            config.EnableCors(corsAttr);
+
         }
     }
 }

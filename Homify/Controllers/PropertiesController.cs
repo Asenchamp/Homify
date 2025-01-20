@@ -25,7 +25,7 @@ namespace Homify.Controllers
         //api to return all available prperties
         [HttpGet]
         [Route("")]
-        public IHttpActionResult getProperty()
+        public IHttpActionResult getProperty(string location = null)
         {
             var properties = _homifyDB.Properties.Include("Descriptions").Include("PropertyImages").Select(p => new Propertydto
             {
@@ -54,6 +54,11 @@ namespace Homify.Controllers
                     imagePath = i.imagePath,
                 }).ToList()
             }).ToList();
+
+            if (!string.IsNullOrEmpty(location))
+            {
+                properties = properties.Where(p=>p.location.Contains(location)).ToList();
+            }
 
             return Json(properties);
         }
