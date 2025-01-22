@@ -20,7 +20,7 @@ namespace Homify.Services
             _smtpServer = "smtp.gmail.com";
             _port = 587;
             _fromEmail = "asenlawrence05@gmail.com";
-            _password = "cnfp bsmy fyfr baiw";
+            _password = "  ";
             _enableSsl = true;
         }
 
